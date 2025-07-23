@@ -15,14 +15,21 @@
 		"enabled": true,
 		"rules": {
 			"recommended": true,
+			"correctness": {
+				"noUnusedVariables": "error"
+			},
 			"suspicious": {
-				"noExplicitAny": "off",
-				"noDebugger": "off",
-				"noConsoleLog": "off",
-				"noConfusingVoidType": "off"
+				"noExplicitAny": "warn",
+				"noDebugger": "error",
+				"noConsoleLog": "warn",
+				"noConfusingVoidType": "warn"
 			},
 			"style": {
-				"noNonNullAssertion": "off"
+				"noNonNullAssertion": "warn",
+				"useNamingConvention": "error"
+			},
+			"nursery": {
+				"useExplicitType": "warn"
 			}
 		}
 	},

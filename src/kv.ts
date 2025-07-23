@@ -13,7 +13,7 @@ type PageContent={
     title:string,
 }
 
-async function put(pageContent:PageContent) {
+async function put(pageContent:PageContent): Promise<{state: boolean, message: string, data?: {key: string}}> {
     try{
     // 检查content是否为标准HTML格式
     if(!pageContent.content.startsWith('<') || !pageContent.content.includes('>')) {
@@ -25,7 +25,7 @@ async function put(pageContent:PageContent) {
     const titleChar=usePinyin(pageContent.title)
     const randomString=generateRandomString(8)
     const key=titleChar+randomString
-    const res=await env.KV.put(key,pageContent.content)
+    await env.KV.put(key,pageContent.content)
     return {
         state:true,
         message:'存放成功',
@@ -37,13 +37,13 @@ async function put(pageContent:PageContent) {
 }catch(error){
     return {
         state:false,
-        message:'存放失败,info:'+error
+        message:`存放失败,info:${error}`
     }
 
 }
 }
 
-async function get(key:string) {
+async function get(key:string): Promise<{state: boolean, message: string, data?: string}> {
     try{
     const res=await env.KV.get(key)
     if(!res){
@@ -60,14 +60,14 @@ async function get(key:string) {
     }catch(error){
         return {
             state:false,
-            message:'获取失败，info：' + error
+            message:`获取失败，info：${error}`
         }
     }
 }
 
 
 // 更新已有页面内容
-async function update(key: string, pageContent: PageContent) {
+async function update(key: string, pageContent: PageContent): Promise<{state: boolean, message: string, data?: {key: string}}> {
     try {
         // 检查key是否存在
         const existingPage = await env.KV.get(key);
@@ -86,7 +86,7 @@ async function update(key: string, pageContent: PageContent) {
             };
         }
         
-        const res = await env.KV.put(key, pageContent.content);
+        await env.KV.put(key, pageContent.content);
         return {
             state: true,
             message: '更新成功',
@@ -97,13 +97,13 @@ async function update(key: string, pageContent: PageContent) {
     } catch (error) {
         return {
             state: false,
-            message: '更新失败，info：' + error
+            message: `更新失败，info：${error}`
         };
     }
 }
 
 // 删除页面
-async function deleteKey(key: string) {
+async function deleteKey(key: string): Promise<{state: boolean, message: string}> {
     try {
         // 检查key是否存在
         const existingPage = await env.KV.get(key);
@@ -118,12 +118,12 @@ async function deleteKey(key: string) {
         return {
             state: true,
             message: '删除成功',
-            data: null
+           
         };
     } catch (error) {
         return {
             state: false,
-            message: '删除失败，info：' + error
+            message: `删除失败，info：${error}`
         };
     }
 }

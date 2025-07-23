@@ -9,7 +9,7 @@ import { htmlToImageByKvKey } from "./html2image";
 
 import { mainPageHtml } from './html/mainPage';
 
-export class MyMCP extends McpAgent {
+export class MyMcp extends McpAgent {
 	server = new McpServer({
 		name: "cloudflare-page-publish-mcp",
 		version: "1.0.0",
@@ -17,7 +17,7 @@ export class MyMCP extends McpAgent {
 
 	
 
-	async init() {
+	async init(): Promise<void> {
 
 	this.server.tool(
 		"页面发布工具",
@@ -31,7 +31,7 @@ export class MyMCP extends McpAgent {
 			if (!result.state) {
 				return { content: [{ type: "text", text: result.message }] };
 			}
-			return { content: [{ type: "text", text: "页面创建成功，访问URL："+`https://${env.host}/pages/${result.data?.key}` }] };
+			return { content: [{ type: "text", text: `页面创建成功，访问URL：https://${env.host}/pages/${result.data?.key}` }] };
 		}
 	);
 
@@ -68,8 +68,8 @@ export class MyMCP extends McpAgent {
 
 const app = new Hono<{ Bindings: Env }>()
 
-app.mount('/sse', MyMCP.serveSSE('/sse').fetch, { replaceRequest: false })
-app.mount('/mcp', MyMCP.serve('/mcp').fetch, { replaceRequest: false} )
+app.mount('/sse', MyMcp.serveSSE('/sse').fetch, { replaceRequest: false })
+app.mount('/mcp', MyMcp.serve('/mcp').fetch, { replaceRequest: false} )
 
 // 首页路由 - 显示HTML编辑器
 app.get('/', async (c) => {
@@ -97,7 +97,7 @@ app.post('/api/publish', async (c) => {
     } catch (error) {
         return c.json({
             state: false,
-            message: '服务器错误：' + error,
+            message: `服务器错误：${error}`,
             data: null
         });
     }
@@ -116,7 +116,7 @@ app.get('/api/get/:key', async (c) => {
     } catch (error) {
         return c.json({
             state: false,
-            message: '服务器错误：' + error,
+            message: `服务器错误：${error}`,
             data: null
         });
     }
@@ -140,7 +140,7 @@ app.post('/api/get-page', async (c) => {
     } catch (error) {
         return c.json({
             state: false,
-            message: '服务器错误：' + error,
+            message: `服务器错误：${error}`,
             data: null
         });
     }
@@ -167,7 +167,7 @@ app.post('/api/update', async (c) => {
     } catch (error) {
         return c.json({
             state: false,
-            message: '服务器错误：' + error,
+            message: `服务器错误：${error}`,
             data: null
         });
     }
@@ -194,7 +194,7 @@ app.post('/api/delete', async (c) => {
     } catch (error) {
         return c.json({
             state: false,
-            message: '服务器错误：' + error,
+            message: `服务器错误：${error}`,
             data: null
         });
     }

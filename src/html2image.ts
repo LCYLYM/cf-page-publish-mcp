@@ -14,7 +14,7 @@ export async function html2image(html: string): Promise<string> {
   return base64String;
 }
 
-export async function htmlToImageByKvKey(key: string) {
+export async function htmlToImageByKvKey(key: string): Promise<{state: boolean, message: string, data?: string}> {
   const html = await KV.get(key)
   if(!html.data){
     return {
