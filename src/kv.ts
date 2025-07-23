@@ -2,7 +2,9 @@ import { usePinyin } from "./pinyin"
 import { env } from "cloudflare:workers";
 export const KV={
     put,
-    get
+    get,
+    update,
+    delete: deleteKey
 
 }
 
@@ -63,6 +65,68 @@ async function get(key:string) {
     }
 }
 
+
+// 更新已有页面内容
+async function update(key: string, pageContent: PageContent) {
+    try {
+        // 检查key是否存在
+        const existingPage = await env.KV.get(key);
+        if (!existingPage) {
+            return {
+                state: false,
+                message: '更新失败，页面不存在'
+            };
+        }
+        
+        // 检查content是否为标准HTML格式
+        if (!pageContent.content.startsWith('<') || !pageContent.content.includes('>')) {
+            return {
+                state: false,
+                message: '更新失败，content不是标准HTML格式'
+            };
+        }
+        
+        const res = await env.KV.put(key, pageContent.content);
+        return {
+            state: true,
+            message: '更新成功',
+            data: {
+                key
+            }
+        };
+    } catch (error) {
+        return {
+            state: false,
+            message: '更新失败，info：' + error
+        };
+    }
+}
+
+// 删除页面
+async function deleteKey(key: string) {
+    try {
+        // 检查key是否存在
+        const existingPage = await env.KV.get(key);
+        if (!existingPage) {
+            return {
+                state: false,
+                message: '删除失败，页面不存在'
+            };
+        }
+        
+        await env.KV.delete(key);
+        return {
+            state: true,
+            message: '删除成功',
+            data: null
+        };
+    } catch (error) {
+        return {
+            state: false,
+            message: '删除失败，info：' + error
+        };
+    }
+}
 
 function generateRandomString(long:number): string {
   const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz';

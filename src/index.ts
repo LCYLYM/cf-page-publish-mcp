@@ -7,6 +7,8 @@ import { env } from "cloudflare:workers";
 import { html } from "hono/html";
 import { htmlToImageByKvKey } from "./html2image";
 
+import { mainPageHtml } from './html/mainPage';
+
 export class MyMCP extends McpAgent {
 	server = new McpServer({
 		name: "cloudflare-page-publish-mcp",
@@ -71,290 +73,7 @@ app.mount('/mcp', MyMCP.serve('/mcp').fetch, { replaceRequest: false} )
 
 // 首页路由 - 显示HTML编辑器
 app.get('/', async (c) => {
-    const editorHtml = `<!DOCTYPE html>
-<html lang="zh-CN">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>HTML页面编辑器</title>
-    <style>
-        * { margin: 0; padding: 0; box-sizing: border-box; }
-        body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            min-height: 100vh;
-            padding: 20px;
-        }
-        .container {
-            max-width: 1200px;
-            margin: 0 auto;
-            background: white;
-            border-radius: 15px;
-            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
-            overflow: hidden;
-        }
-        .header {
-            background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
-            color: white;
-            padding: 30px;
-            text-align: center;
-        }
-        .header h1 { font-size: 2.5em; margin-bottom: 10px; font-weight: 300; }
-        .header p { font-size: 1.1em; opacity: 0.9; }
-        .main-content { padding: 40px; }
-        .form-group { margin-bottom: 25px; }
-        label {
-            display: block;
-            margin-bottom: 8px;
-            font-weight: 600;
-            color: #333;
-            font-size: 1.1em;
-        }
-        input[type="text"] {
-            width: 100%;
-            padding: 15px;
-            border: 2px solid #e1e5e9;
-            border-radius: 8px;
-            font-size: 16px;
-            transition: border-color 0.3s ease;
-        }
-        input[type="text"]:focus {
-            outline: none;
-            border-color: #4facfe;
-            box-shadow: 0 0 0 3px rgba(79, 172, 254, 0.1);
-        }
-        .editor-container {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 20px;
-            height: 500px;
-        }
-        .editor-panel {
-            border: 2px solid #e1e5e9;
-            border-radius: 8px;
-            overflow: hidden;
-        }
-        .panel-header {
-            background: #f8f9fa;
-            padding: 12px 20px;
-            border-bottom: 1px solid #e1e5e9;
-            font-weight: 600;
-            color: #495057;
-        }
-        #htmlEditor {
-            width: 100%;
-            height: calc(100% - 45px);
-            border: none;
-            padding: 20px;
-            font-family: 'Courier New', monospace;
-            font-size: 14px;
-            resize: none;
-            outline: none;
-            background: #f8f9fa;
-        }
-        #preview {
-            width: 100%;
-            height: calc(100% - 45px);
-            border: none;
-            background: white;
-        }
-        .button-group {
-            display: flex;
-            gap: 15px;
-            margin-top: 30px;
-            justify-content: center;
-        }
-        .btn {
-            padding: 15px 30px;
-            border: none;
-            border-radius: 8px;
-            font-size: 16px;
-            font-weight: 600;
-            cursor: pointer;
-            transition: all 0.3s ease;
-        }
-        .btn-preview {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            color: white;
-        }
-        .btn-publish {
-            background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%);
-            color: white;
-        }
-        .btn:hover { transform: translateY(-2px); }
-        .btn:disabled { opacity: 0.6; cursor: not-allowed; transform: none !important; }
-        .status-message {
-            margin-top: 20px;
-            padding: 15px;
-            border-radius: 8px;
-            text-align: center;
-            font-weight: 600;
-            display: none;
-        }
-        .status-success {
-            background: #d4edda;
-            color: #155724;
-            border: 1px solid #c3e6cb;
-        }
-        .status-error {
-            background: #f8d7da;
-            color: #721c24;
-            border: 1px solid #f5c6cb;
-        }
-        .loading {
-            display: inline-block;
-            width: 20px;
-            height: 20px;
-            border: 3px solid #f3f3f3;
-            border-top: 3px solid #4facfe;
-            border-radius: 50%;
-            animation: spin 1s linear infinite;
-            margin-right: 10px;
-        }
-        @keyframes spin {
-            0% { transform: rotate(0deg); }
-            100% { transform: rotate(360deg); }
-        }
-        @media (max-width: 768px) {
-            .editor-container { grid-template-columns: 1fr; height: auto; }
-            .editor-panel { height: 300px; }
-            .button-group { flex-direction: column; align-items: center; }
-            .btn { width: 100%; max-width: 300px; }
-        }
-    </style>
-</head>
-<body>
-    <div class="container">
-        <div class="header">
-            <h1>🚀 HTML页面编辑器</h1>
-            <p>创建、编辑并发布您的HTML页面</p>
-        </div>
-        <div class="main-content">
-            <div class="form-group">
-                <label for="pageTitle">📝 页面标题</label>
-                <input type="text" id="pageTitle" placeholder="请输入页面标题..." required>
-            </div>
-            <div class="form-group">
-                <label>💻 HTML编辑器</label>
-                <div class="editor-container">
-                    <div class="editor-panel">
-                        <div class="panel-header">HTML代码</div>
-                        <textarea id="htmlEditor" placeholder="请输入您的HTML代码..."></textarea>
-                    </div>
-                    <div class="editor-panel">
-                        <div class="panel-header">实时预览</div>
-                        <iframe id="preview"></iframe>
-                    </div>
-                </div>
-            </div>
-            <div class="button-group">
-                <button class="btn btn-preview" onclick="updatePreview()">🔄 更新预览</button>
-                <button class="btn btn-publish" onclick="publishPage()">🚀 发布页面</button>
-            </div>
-            <div id="statusMessage" class="status-message"></div>
-        </div>
-    </div>
-    <script>
-        function updatePreview() {
-            var htmlContent = document.getElementById('htmlEditor').value;
-            var preview = document.getElementById('preview');
-            if (htmlContent.trim()) {
-                var blob = new Blob([htmlContent], { type: 'text/html' });
-                var url = URL.createObjectURL(blob);
-                preview.src = url;
-            } else {
-                preview.src = 'about:blank';
-            }
-        }
-        
-        document.getElementById('htmlEditor').addEventListener('input', function() {
-            clearTimeout(this.updateTimeout);
-            this.updateTimeout = setTimeout(updatePreview, 500);
-        });
-        
-        function validateHTML(html) {
-            var errors = [];
-            if (!html.trim()) {
-                errors.push('HTML内容不能为空');
-                return errors;
-            }
-            if (html.indexOf('<') === -1 || html.indexOf('>') === -1) {
-                errors.push('不是有效的HTML格式');
-            }
-            return errors;
-        }
-        
-        function showStatus(message, type) {
-            var statusDiv = document.getElementById('statusMessage');
-            statusDiv.className = 'status-message status-' + (type || 'success');
-            statusDiv.innerHTML = message;
-            statusDiv.style.display = 'block';
-            if (type === 'success') {
-                setTimeout(function() {
-                    statusDiv.style.display = 'none';
-                }, 5000);
-            }
-        }
-        
-        function publishPage() {
-            var title = document.getElementById('pageTitle').value.trim();
-            var htmlContent = document.getElementById('htmlEditor').value.trim();
-            var publishBtn = document.querySelector('.btn-publish');
-            
-            if (!title) {
-                showStatus('请输入页面标题', 'error');
-                return;
-            }
-            if (!htmlContent) {
-                showStatus('请输入HTML内容', 'error');
-                return;
-            }
-            
-            var validationErrors = validateHTML(htmlContent);
-            if (validationErrors.length > 0) {
-                showStatus('HTML验证失败：' + validationErrors.join('；'), 'error');
-                return;
-            }
-            
-            publishBtn.disabled = true;
-            publishBtn.innerHTML = '<span class="loading"></span>发布中...';
-            
-            fetch('/api/publish', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ title: title, content: htmlContent })
-            })
-            .then(function(response) { return response.json(); })
-            .then(function(result) {
-                if (result.state) {
-                    var pageUrl = window.location.origin + '/pages/' + result.data.key;
-                    showStatus('🎉 页面发布成功！<br><a href="' + pageUrl + '" target="_blank" style="color: #155724; text-decoration: underline;">' + pageUrl + '</a>', 'success');
-                    document.getElementById('pageTitle').value = '';
-                    document.getElementById('htmlEditor').value = '';
-                    updatePreview();
-                } else {
-                    showStatus('发布失败：' + result.message, 'error');
-                }
-            })
-            .catch(function(error) {
-                showStatus('发布失败：网络错误', 'error');
-                console.error('发布错误:', error);
-            })
-            .finally(function() {
-                publishBtn.disabled = false;
-                publishBtn.innerHTML = '🚀 发布页面';
-            });
-        }
-        
-        document.addEventListener('DOMContentLoaded', function() {
-            var defaultHTML = '<!DOCTYPE html>\\n<html lang="zh-CN">\\n<head>\\n    <meta charset="UTF-8">\\n    <meta name="viewport" content="width=device-width, initial-scale=1.0">\\n    <title>我的页面</title>\\n    <style>\\n        body { font-family: Arial, sans-serif; max-width: 800px; margin: 0 auto; padding: 20px; line-height: 1.6; }\\n        h1 { color: #333; text-align: center; }\\n    </style>\\n</head>\\n<body>\\n    <h1>欢迎来到我的页面</h1>\\n    <p>这是一个示例页面，您可以编辑这些内容。</p>\\n    <p>您可以添加更多的HTML元素，如：</p>\\n    <ul>\\n        <li>列表项目</li>\\n        <li>链接：<a href="#">示例链接</a></li>\\n        <li>图片：<img src="https://via.placeholder.com/150" alt="示例图片"></li>\\n    </ul>\\n</body>\\n</html>';
-            document.getElementById('htmlEditor').value = defaultHTML;
-            updatePreview();
-        });
-    </script>
-</body>
-</html>`;
-    return c.html(editorHtml);
+    return c.html(mainPageHtml);
 });
 
 // API路由 - 处理页面发布请求
@@ -373,6 +92,103 @@ app.post('/api/publish', async (c) => {
         
         // 使用现有的KV存储功能
         const result = await KV.put({ title, content });
+        
+        return c.json(result);
+    } catch (error) {
+        return c.json({
+            state: false,
+            message: '服务器错误：' + error,
+            data: null
+        });
+    }
+});
+
+
+
+
+
+// API路由 - 获取页面内容
+app.get('/api/get/:key', async (c) => {
+    try {
+        const key = c.req.param('key');
+        const result = await KV.get(key);
+        return c.json(result);
+    } catch (error) {
+        return c.json({
+            state: false,
+            message: '服务器错误：' + error,
+            data: null
+        });
+    }
+});
+
+// API路由 - 通过页面ID获取页面内容和标题
+app.post('/api/get-page', async (c) => {
+    try {
+        const { pageId } = await c.req.json();
+        
+        if (!pageId) {
+            return c.json({
+                state: false,
+                message: '页面ID不能为空',
+                data: null
+            });
+        }
+        
+        const result = await KV.get(pageId);
+        return c.json(result);
+    } catch (error) {
+        return c.json({
+            state: false,
+            message: '服务器错误：' + error,
+            data: null
+        });
+    }
+});
+
+// API路由 - 处理页面更新请求
+app.post('/api/update', async (c) => {
+    try {
+        const { key, title, content } = await c.req.json();
+        
+        // 验证输入参数
+        if (!key || !content) {
+            return c.json({
+                state: false,
+                message: '页面ID和内容不能为空',
+                data: null
+            });
+        }
+        
+        // 使用KV更新功能
+        const result = await KV.update(key, { title: title || '', content });
+        
+        return c.json(result);
+    } catch (error) {
+        return c.json({
+            state: false,
+            message: '服务器错误：' + error,
+            data: null
+        });
+    }
+});
+
+// API路由 - 处理页面删除请求
+app.post('/api/delete', async (c) => {
+    try {
+        const { key } = await c.req.json();
+        
+        // 验证输入参数
+        if (!key) {
+            return c.json({
+                state: false,
+                message: '页面ID不能为空',
+                data: null
+            });
+        }
+        
+        // 使用KV删除功能
+        const result = await KV.delete(key);
         
         return c.json(result);
     } catch (error) {
