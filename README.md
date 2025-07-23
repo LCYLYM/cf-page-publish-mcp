@@ -8,6 +8,8 @@ sse 体验地址：[cf-page-publish-sse](https://page.sereniblue.com/sse)
 
 streamableHttp 体验地址：[cf-page-publish-stream](https://page.sereniblue.com/mcp)
 
+ui 可视化页面体验地址：[cf-page-publish-ui](https://page.sereniblue.com)
+
 体验地址使用worker绑定github的方式部署，确保体验地址与源码保持同步。
 
 ## 核心功能
