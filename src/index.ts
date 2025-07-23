@@ -8,7 +8,7 @@ import { html } from "hono/html";
 import { htmlToImageByKvKey } from "./html2image";
 import { mainPageHtml } from './html/mainPage';
 
-export class MyMcp extends McpAgent {
+export class MyMCP extends McpAgent {
 	server = new McpServer({
 		name: "cloudflare-page-publish-mcp",
 		version: "1.0.0",
@@ -99,8 +99,8 @@ export class MyMcp extends McpAgent {
 
 const app = new Hono<{ Bindings: Env }>()
 
-app.mount('/sse', MyMcp.serveSSE('/sse').fetch, { replaceRequest: false })
-app.mount('/mcp', MyMcp.serve('/mcp').fetch, { replaceRequest: false} )
+app.mount('/sse', MyMCP.serveSSE('/sse').fetch, { replaceRequest: false })
+app.mount('/mcp', MyMCP.serve('/mcp').fetch, { replaceRequest: false} )
 
 // 首页路由 - 显示HTML编辑器
 app.get('/', async (c) => {
