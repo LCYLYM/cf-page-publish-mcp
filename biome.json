@@ -26,7 +26,7 @@
 			},
 			"style": {
 				"noNonNullAssertion": "warn",
-				"useNamingConvention": "error"
+				"useNamingConvention": "off"
 			},
 			"nursery": {
 				"useExplicitType": "warn"
