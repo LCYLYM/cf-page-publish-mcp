@@ -18,6 +18,10 @@ streamableHttp 体验地址：[cf-page-publish-stream](https://page.sereniblue.c
 
 返回一个参数，页面的访问链接
 
+### 获取页面图片
+
+根据页面ID获取渲染后的PNG图片，页面ID就是页面发布工具返回的pages/后面的那一段
+
 ## 自部署教程
 
 ### 环境要求
