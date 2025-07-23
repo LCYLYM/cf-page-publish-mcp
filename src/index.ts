@@ -6,7 +6,6 @@ import { KV } from "./kv";
 import { env } from "cloudflare:workers";
 import { html } from "hono/html";
 import { htmlToImageByKvKey } from "./html2image";
-
 import { mainPageHtml } from './html/mainPage';
 
 export class MyMcp extends McpAgent {
@@ -58,6 +57,38 @@ export class MyMcp extends McpAgent {
 				_meta: {},
 				structuredContent: {}
 			};
+		}
+	);
+
+	this.server.tool(
+		"页面更新工具",
+		"通过页面ID更新已有页面的HTML内容，需要提供页面ID、新的页面标题和新的HTML内容",
+		{
+			pageId: z.string(),
+			pagetitle: z.string(),
+			pagehtml: z.string()
+		},
+		async ({ pageId, pagetitle, pagehtml }) => {
+			const result = await KV.update(pageId, { title: pagetitle, content: pagehtml });
+			if (!result.state) {
+				return { content: [{ type: "text", text: result.message }] };
+			}
+			return { content: [{ type: "text", text: `页面更新成功，访问URL：https://${env.host}/pages/${pageId}` }] };
+		}
+	);
+
+	this.server.tool(
+		"页面删除工具",
+		"通过页面ID删除已有页面，需要提供页面ID",
+		{
+			pageId: z.string()
+		},
+		async ({ pageId }) => {
+			const result = await KV.delete(pageId);
+			if (!result.state) {
+				return { content: [{ type: "text", text: result.message }] };
+			}
+			return { content: [{ type: "text", text: "页面删除成功" }] };
 		}
 	);
 		

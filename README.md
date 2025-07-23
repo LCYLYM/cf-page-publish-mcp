@@ -33,6 +33,14 @@ streamableHttp 体验地址：[cf-page-publish-stream](https://page.sereniblue.c
 
 根据页面ID获取渲染后的PNG图片，页面ID就是页面发布工具返回的pages/后面的那一段
 
+### 页面更新工具
+
+通过页面ID更新已有页面的HTML内容，需要提供页面ID、新的页面标题和新的HTML内容
+
+### 页面删除工具
+
+通过页面ID删除已有页面，需要提供页面ID
+
 ## 自部署教程
 
 ### 环境要求
