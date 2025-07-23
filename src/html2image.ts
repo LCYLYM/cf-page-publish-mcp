@@ -11,7 +11,7 @@ export async function html2image(html: string): Promise<string> {
   await browser.close();
   // 确保buffer是Uint8Array类型
   const base64String = Buffer.from(buffer).toString('base64');
-  return `data:image/png;base64,${base64String}`;
+  return base64String;
 }
 
 export async function htmlToImageByKvKey(key: string) {
