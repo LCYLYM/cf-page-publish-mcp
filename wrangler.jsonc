@@ -18,7 +18,8 @@
 	"kv_namespaces": [
 		{
 		  "binding": "KV",
-		  "id": "7d776eaeacd0412380f6eb39ca4aea9a"
+		  "id": "7d776eaeacd0412380f6eb39ca4aea9a",
+		  "preview_id": "8d5aa85ebba14a3391bfbb5d18af56d3"
 		}
 	  ],
 	"migrations": [
@@ -39,8 +40,9 @@
 	},
 	"observability": {
 		"enabled": true
-	}
+	},
 
+	"browser": {"binding": "MYBROWSER"}
 	/**
 	 * Smart Placement
 	 * Docs: https://developers.cloudflare.com/workers/configuration/smart-placement/#smart-placement
@@ -75,4 +77,5 @@
 	 * https://developers.cloudflare.com/workers/wrangler/configuration/#service-bindings
 	 */
 	// "services": [{ "binding": "MY_SERVICE", "service": "my-service" }]
+	
 }

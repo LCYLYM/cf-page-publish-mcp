@@ -20,7 +20,7 @@
 	},
 	"devDependencies": {
 		"@biomejs/biome": "^1.9.4",
-		"@types/jsdom": "^21.1.7",
+		"@cloudflare/puppeteer": "^1.0.2",
 		"@types/node": "^22.15.30",
 		"typescript": "^5.8.3",
 		"wrangler": "^4.19.1"

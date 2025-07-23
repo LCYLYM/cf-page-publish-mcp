@@ -5,6 +5,7 @@ import { Hono } from "hono"
 import { KV } from "./kv";
 import { env } from "cloudflare:workers";
 import { html } from "hono/html";
+import { htmlToImageByKvKey } from "./html2image";
 
 export class MyMCP extends McpAgent {
 	server = new McpServer({
@@ -29,6 +30,32 @@ export class MyMCP extends McpAgent {
 				return { content: [{ type: "text", text: result.message }] };
 			}
 			return { content: [{ type: "text", text: "页面创建成功，访问URL："+`https://${env.host}/pages/${result.data?.key}` }] };
+		}
+	);
+
+	this.server.tool(
+		"获取页面图片",
+		"根据页面ID获取渲染后的图片,页面id就是页面发布工具返回的pages/后面的那一段",
+		{
+			pageId: z.string()
+		},
+		async ({ pageId }) => {
+			const result = await htmlToImageByKvKey(pageId);
+			if (!result.state) {
+				return { content: [{ type: "text", text: result.message }] };
+			}
+			if (!result.data) {
+				return { content: [{ type: "text", text: "无法获取页面图片" }] };
+			}
+			return { 
+				content: [{ 
+					type: "image", 
+					data: result.data, 
+					mimeType: "image/png" 
+				}],
+				_meta: {},
+				structuredContent: {}
+			};
 		}
 	);
 		
