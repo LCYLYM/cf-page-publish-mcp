@@ -9,7 +9,9 @@ export async function html2image(html: string): Promise<string> {
   await page.waitForNetworkIdle();
   const buffer = await page.screenshot();
   await browser.close();
-  return `data:image/png;base64,${buffer.toString('base64')}`;
+  // 确保buffer是Uint8Array类型
+  const base64String = Buffer.from(buffer).toString('base64');
+  return `data:image/png;base64,${base64String}`;
 }
 
 export async function htmlToImageByKvKey(key: string) {
