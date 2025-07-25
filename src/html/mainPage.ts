@@ -540,6 +540,15 @@ export const mainPageHtml = `<!DOCTYPE html>
                                 • pageId (string): 要删除的页面ID
                             </div>
                         </div>
+                        
+                        <div style="border: 1px solid var(--border-color); border-radius: 8px; padding: 16px;">
+                            <h4 style="margin-bottom: 8px; color: #8b5cf6;">📄 获取页面代码</h4>
+                            <p style="font-size: 14px; margin-bottom: 8px; line-height: 1.5;">通过页面ID获取页面的HTML源代码</p>
+                            <div style="font-size: 12px; color: #666;">
+                                <strong>参数：</strong><br>
+                                • pageId (string): 要获取的页面ID
+                            </div>
+                        </div>
                     </div>
                 </div>
                 

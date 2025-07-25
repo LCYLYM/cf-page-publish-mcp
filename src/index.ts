@@ -91,6 +91,24 @@ export class MyMCP extends McpAgent {
 			return { content: [{ type: "text", text: "页面删除成功" }] };
 		}
 	);
+
+	this.server.tool(
+		"获取页面代码",
+		"通过页面ID获取页面的HTML代码",
+		{
+			pageId: z.string()
+		},
+		async ({ pageId }) => {
+			const result = await KV.get(pageId);
+			if (!result.state) {
+				return { content: [{ type: "text", text: result.message }] };
+			}
+			if (!result.data) {
+				return { content: [{ type: "text", text: "页面不存在" }] };
+			}
+			return { content: [{ type: "text", text: result.data }] };
+		}
+	);
 		
 
 	
