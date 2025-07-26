@@ -19,5 +19,5 @@
 			"node"
 		]
 	},
-	"include": ["worker-configuration.d.ts", "src/**/*.ts", "test/html-example.ts"]
+	"include": ["worker-configuration.d.ts", "src/**/*.ts", "test/html-example.ts", "tests/**/*.ts"]
 }
