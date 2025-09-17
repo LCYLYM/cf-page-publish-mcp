@@ -4,7 +4,9 @@ export const KV={
     put,
     get,
     update,
-    delete: deleteKey
+    delete: deleteKey,
+    putImage,
+    getImage
 
 }
 
@@ -135,4 +137,47 @@ function generateRandomString(long:number): string {
     result += chars.charAt(Math.floor(Math.random() * chars.length));
   }
   return result;
+}
+
+// 存储图片数据
+async function putImage(pageId: string, imageData: string): Promise<{state: boolean, message: string, data?: {imageId: string}}> {
+    try {
+        const imageId = `img_${pageId}_${generateRandomString(8)}`;
+        await env.KV.put(imageId, imageData);
+        return {
+            state: true,
+            message: '图片存储成功',
+            data: {
+                imageId
+            }
+        };
+    } catch (error) {
+        return {
+            state: false,
+            message: `图片存储失败，info：${error}`
+        };
+    }
+}
+
+// 获取图片数据
+async function getImage(imageId: string): Promise<{state: boolean, message: string, data?: string}> {
+    try {
+        const imageData = await env.KV.get(imageId);
+        if (!imageData) {
+            return {
+                state: false,
+                message: '图片不存在'
+            };
+        }
+        return {
+            state: true,
+            message: '图片获取成功',
+            data: imageData
+        };
+    } catch (error) {
+        return {
+            state: false,
+            message: `图片获取失败，info：${error}`
+        };
+    }
 }

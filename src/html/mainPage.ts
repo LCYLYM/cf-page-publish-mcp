@@ -873,18 +873,19 @@ export const mainPageHtml = `<!DOCTYPE html>
                 return;
             }
             
-            showStatus('<span class="loading"></span>正在生成截图...', 'success', statusDiv);
+            showStatus('<span class="loading"></span>正在生成全页面截图...', 'success', statusDiv);
             resultDiv.style.display = 'none';
             
             try {
-                const response = await fetch('/api/screenshot/' + encodeURIComponent(pageId));
+                // 使用新的截图URL API
+                const response = await fetch('/api/screenshot-url/' + encodeURIComponent(pageId));
                 const result = await response.json();
                 
                 if (result.state && result.data) {
-                    // 显示截图
-                    imageElement.src = 'data:image/png;base64,' + result.data;
+                    // 直接设置图片URL
+                    imageElement.src = result.data;
                     resultDiv.style.display = 'block';
-                    showStatus('截图生成成功！', 'success', statusDiv);
+                    showStatus('全页面截图生成成功！', 'success', statusDiv);
                 } else {
                     showStatus('生成失败：' + result.message, 'error', statusDiv);
                 }

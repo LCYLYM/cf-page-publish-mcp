@@ -5,7 +5,7 @@ import { Hono } from "hono"
 import { KV } from "./kv";
 import { env } from "cloudflare:workers";
 import { html } from "hono/html";
-import { htmlToImageByKvKey } from "./html2image";
+import { htmlToImageByKvKey, htmlToImageUrlByKvKey } from "./html2image";
 import { mainPageHtml } from './html/mainPage';
 
 export class MyMCP extends McpAgent {
@@ -36,27 +36,19 @@ export class MyMCP extends McpAgent {
 
 	this.server.tool(
 		"获取页面图片",
-		"根据页面ID获取渲染后的图片,页面id就是页面发布工具返回的pages/后面的那一段",
+		"根据页面ID获取渲染后的图片链接,页面id就是页面发布工具返回的pages/后面的那一段",
 		{
 			pageId: z.string()
 		},
 		async ({ pageId }) => {
-			const result = await htmlToImageByKvKey(pageId);
+			const result = await htmlToImageUrlByKvKey(pageId);
 			if (!result.state) {
 				return { content: [{ type: "text", text: result.message }] };
 			}
 			if (!result.data) {
-				return { content: [{ type: "text", text: "无法获取页面图片" }] };
+				return { content: [{ type: "text", text: "无法获取页面图片链接" }] };
 			}
-			return { 
-				content: [{ 
-					type: "image", 
-					data: result.data, 
-					mimeType: "image/png" 
-				}],
-				_meta: {},
-				structuredContent: {}
-			};
+			return { content: [{ type: "text", text: `图片链接：${result.data}` }] };
 		}
 	);
 
@@ -249,7 +241,7 @@ app.post('/api/delete', async (c) => {
     }
 });
 
-// API路由 - 获取页面截图
+// API路由 - 获取页面截图 (返回base64数据，兼容现有UI)
 app.get('/api/screenshot/:pageId', async (c) => {
     try {
         const pageId = c.req.param('pageId');
@@ -273,6 +265,63 @@ app.get('/api/screenshot/:pageId', async (c) => {
             message: `服务器错误：${error}`,
             data: null
         });
+    }
+});
+
+// API路由 - 获取页面截图链接 (返回图片URL)
+app.get('/api/screenshot-url/:pageId', async (c) => {
+    try {
+        const pageId = c.req.param('pageId');
+        
+        // 验证输入参数
+        if (!pageId) {
+            return c.json({
+                state: false,
+                message: '页面ID不能为空',
+                data: null
+            });
+        }
+        
+        // 使用新的截图URL功能
+        const result = await htmlToImageUrlByKvKey(pageId);
+        
+        return c.json(result);
+    } catch (error) {
+        return c.json({
+            state: false,
+            message: `服务器错误：${error}`,
+            data: null
+        });
+    }
+});
+
+// 图片服务路由 - 通过图片ID获取图片
+app.get('/image/:imageId', async (c) => {
+    try {
+        const imageId = c.req.param('imageId');
+        
+        // 验证输入参数
+        if (!imageId) {
+            return c.text('图片ID不能为空', 400);
+        }
+        
+        // 获取图片数据
+        const result = await KV.getImage(imageId);
+        
+        if (!result.state || !result.data) {
+            return c.text('图片不存在', 404);
+        }
+        
+        // 返回图片数据
+        const imageBuffer = Buffer.from(result.data, 'base64');
+        return c.body(imageBuffer, {
+            headers: {
+                'Content-Type': 'image/png',
+                'Cache-Control': 'public, max-age=86400' // 缓存1天
+            }
+        });
+    } catch (error) {
+        return c.text(`服务器错误：${error}`, 500);
     }
 });
 
