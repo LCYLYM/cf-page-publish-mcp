@@ -65,7 +65,8 @@ import { KV } from '../src/kv'
 import { htmlToImageByKvKey, htmlToImageUrlByKvKey } from '../src/html2image'
 
 const mockKV = KV as any
-const mockHtmlToImage = { htmlToImageByKvKey, htmlToImageUrlByKvKey }
+const mockHtmlToImageByKvKey = htmlToImageByKvKey as any
+const mockHtmlToImageUrlByKvKey = htmlToImageUrlByKvKey as any
 
 describe('MCP工具集功能测试', () => {
   let mcpInstance: MyMCP
@@ -171,7 +172,7 @@ describe('MCP工具集功能测试', () => {
       const mockImageUrl = '/image/img_CeShiYeMianABCDEFGH_abc123'
       
       // 模拟htmlToImageUrlByKvKey成功
-      mockHtmlToImage.htmlToImageUrlByKvKey.mockResolvedValue({
+      mockHtmlToImageUrlByKvKey.mockResolvedValue({
         state: true,
         message: '成功生成页面图片链接',
         data: mockImageUrl
@@ -189,7 +190,7 @@ describe('MCP工具集功能测试', () => {
       // 验证结果
       expect(result.content[0].type).toBe('text')
       expect(result.content[0].text).toBe(`图片链接：${mockImageUrl}`)
-      expect(mockHtmlToImage.htmlToImageUrlByKvKey).toHaveBeenCalledWith(testData.pageId)
+      expect(mockHtmlToImageUrlByKvKey).toHaveBeenCalledWith(testData.pageId)
     })
 
     it('应该处理页面不存在的情况', async () => {
@@ -197,7 +198,7 @@ describe('MCP工具集功能测试', () => {
       const testData = { pageId: 'nonexistent' }
       
       // 模拟htmlToImageUrlByKvKey失败
-      mockHtmlToImage.htmlToImageUrlByKvKey.mockResolvedValue({
+      mockHtmlToImageUrlByKvKey.mockResolvedValue({
         state: false,
         message: '页面不存在'
       })
