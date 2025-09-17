@@ -495,6 +495,11 @@ export const mainPageHtml = `<!DOCTYPE html>
         <div id="screenshot-tab" class="tab-content">
             <div class="card">
                 <h2 style="margin-bottom: 24px; font-size: 1.5rem;">页面截图预览</h2>
+                <div style="background: #e8f4fd; padding: 12px; border-radius: 6px; margin-bottom: 20px; border-left: 4px solid #3b82f6;">
+                    <small style="color: #1e40af; font-size: 13px;">
+                        📸 支持完整页面截图（包括滚动内容），MCP接口返回可直接访问的图片链接
+                    </small>
+                </div>
                 
                 <div class="form-group">
                     <label class="form-label" for="screenshotPageId">页面ID</label>
@@ -558,10 +563,12 @@ export const mainPageHtml = `<!DOCTYPE html>
                         
                         <div style="border: 1px solid var(--border-color); border-radius: 8px; padding: 16px;">
                             <h4 style="margin-bottom: 8px; color: #3b82f6;">🖼️ 获取页面图片</h4>
-                            <p style="font-size: 14px; margin-bottom: 8px; line-height: 1.5;">根据页面ID获取渲染后的图片</p>
+                            <p style="font-size: 14px; margin-bottom: 8px; line-height: 1.5;">生成完整页面截图并返回访问链接</p>
                             <div style="font-size: 12px; color: #666;">
                                 <strong>参数：</strong><br>
-                                • pageId (string): 页面ID（发布工具返回的pages/后面的部分）
+                                • pageId (string): 页面ID（发布工具返回的pages/后面的部分）<br>
+                                <strong>返回：</strong> 可直接访问的图片链接（/image/id 格式）<br>
+                                <strong>特性：</strong> 支持完整页面截图，包括滚动内容
                             </div>
                         </div>
                         
