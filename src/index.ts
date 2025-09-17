@@ -249,6 +249,33 @@ app.post('/api/delete', async (c) => {
     }
 });
 
+// API路由 - 获取页面截图
+app.get('/api/screenshot/:pageId', async (c) => {
+    try {
+        const pageId = c.req.param('pageId');
+        
+        // 验证输入参数
+        if (!pageId) {
+            return c.json({
+                state: false,
+                message: '页面ID不能为空',
+                data: null
+            });
+        }
+        
+        // 使用现有的截图功能
+        const result = await htmlToImageByKvKey(pageId);
+        
+        return c.json(result);
+    } catch (error) {
+        return c.json({
+            state: false,
+            message: `服务器错误：${error}`,
+            data: null
+        });
+    }
+});
+
 // 现有的页面访问路由
 app.get('/pages/:key',async (c)=>{
     const key=c.req.param('key')

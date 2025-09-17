@@ -257,6 +257,17 @@ export const mainPageHtml = `<!DOCTYPE html>
             transform: none;
         }
         
+        .btn-secondary {
+            background-color: transparent;
+            border-color: #999;
+            color: #666;
+        }
+        
+        .btn-secondary:hover {
+            background-color: #f5f5f5;
+            color: #333;
+        }
+        
         .btn-primary {
             background-color: var(--text-color);
             color: var(--bg-color);
@@ -381,6 +392,7 @@ export const mainPageHtml = `<!DOCTYPE html>
             <button class="nav-tab active" onclick="switchTab('create')">创建页面</button>
             <button class="nav-tab" onclick="switchTab('edit')">编辑页面</button>
             <button class="nav-tab" onclick="switchTab('delete')">删除页面</button>
+            <button class="nav-tab" onclick="switchTab('screenshot')">预览截图</button>
             <button class="nav-tab" onclick="switchTab('docs')">文档</button>
         </div>
         
@@ -476,6 +488,38 @@ export const mainPageHtml = `<!DOCTYPE html>
                     <button class="btn" style="background-color: #dc2626; color: white;" onclick="deletePage()">确认删除</button>
                 </div>
                 <div id="deleteStatus" class="status-message"></div>
+            </div>
+        </div>
+        
+        <!-- 预览截图标签 -->
+        <div id="screenshot-tab" class="tab-content">
+            <div class="card">
+                <h2 style="margin-bottom: 24px; font-size: 1.5rem;">页面截图预览</h2>
+                
+                <div class="form-group">
+                    <label class="form-label" for="screenshotPageId">页面ID</label>
+                    <input type="text" class="form-input" id="screenshotPageId" placeholder="请输入要截图的页面ID..." required>
+                    <small style="color: #666; font-size: 12px; margin-top: 4px; display: block;">
+                        输入页面发布后返回的URL中 "/pages/" 后面的部分
+                    </small>
+                </div>
+                
+                <div class="btn-group">
+                    <button class="btn" onclick="generateScreenshot()">生成截图</button>
+                    <button class="btn btn-secondary" onclick="clearScreenshot()">清空</button>
+                </div>
+                
+                <div id="screenshotResult" style="margin-top: 24px; display: none;">
+                    <h3 style="margin-bottom: 16px; font-size: 1.1rem;">截图预览</h3>
+                    <div style="border: 1px solid var(--border-color); border-radius: 8px; padding: 16px; background: #f9f9f9;">
+                        <img id="screenshotImage" style="max-width: 100%; height: auto; border-radius: 4px; box-shadow: 0 2px 8px rgba(0,0,0,0.1);" alt="页面截图">
+                        <div style="margin-top: 12px; font-size: 14px; color: #666;">
+                            <p><strong>提示：</strong>右键点击图片可以保存到本地</p>
+                        </div>
+                    </div>
+                </div>
+                
+                <div id="screenshotStatus" class="status-message"></div>
             </div>
         </div>
         
@@ -815,6 +859,45 @@ export const mainPageHtml = `<!DOCTYPE html>
             } catch (error) {
                 showStatus('删除失败：网络错误', 'error', statusDiv);
             }
+        }
+        
+        // 生成截图功能
+        async function generateScreenshot() {
+            const pageId = document.getElementById('screenshotPageId').value.trim();
+            const statusDiv = document.getElementById('screenshotStatus');
+            const resultDiv = document.getElementById('screenshotResult');
+            const imageElement = document.getElementById('screenshotImage');
+            
+            if (!pageId) {
+                showStatus('请输入页面ID', 'error', statusDiv);
+                return;
+            }
+            
+            showStatus('<span class="loading"></span>正在生成截图...', 'success', statusDiv);
+            resultDiv.style.display = 'none';
+            
+            try {
+                const response = await fetch('/api/screenshot/' + encodeURIComponent(pageId));
+                const result = await response.json();
+                
+                if (result.state && result.data) {
+                    // 显示截图
+                    imageElement.src = 'data:image/png;base64,' + result.data;
+                    resultDiv.style.display = 'block';
+                    showStatus('截图生成成功！', 'success', statusDiv);
+                } else {
+                    showStatus('生成失败：' + result.message, 'error', statusDiv);
+                }
+            } catch (error) {
+                showStatus('生成失败：网络错误', 'error', statusDiv);
+            }
+        }
+        
+        // 清空截图
+        function clearScreenshot() {
+            document.getElementById('screenshotPageId').value = '';
+            document.getElementById('screenshotResult').style.display = 'none';
+            document.getElementById('screenshotStatus').style.display = 'none';
         }
         
         // 通用状态显示函数
