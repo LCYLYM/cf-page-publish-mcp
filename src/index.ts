@@ -5,7 +5,7 @@ import { Hono } from "hono"
 import { KV } from "./kv";
 import { env } from "cloudflare:workers";
 import { html } from "hono/html";
-import { htmlToImageByKvKey } from "./html2image";
+import { htmlToImageByKvKey, generateScreenshotUrl } from "./html2image";
 import { mainPageHtml } from './html/mainPage';
 
 export class MyMCP extends McpAgent {
@@ -36,23 +36,22 @@ export class MyMCP extends McpAgent {
 
 	this.server.tool(
 		"获取页面图片",
-		"根据页面ID获取渲染后的图片,页面id就是页面发布工具返回的pages/后面的那一段",
+		"根据页面ID生成完整页面截图并返回访问链接，页面id就是页面发布工具返回的pages/后面的那一段。返回的是可直接访问的图片链接，支持完整页面截图（包括滚动内容）",
 		{
 			pageId: z.string()
 		},
 		async ({ pageId }) => {
-			const result = await htmlToImageByKvKey(pageId);
+			const result = await generateScreenshotUrl(pageId);
 			if (!result.state) {
 				return { content: [{ type: "text", text: result.message }] };
 			}
-			if (!result.data) {
-				return { content: [{ type: "text", text: "无法获取页面图片" }] };
+			if (!result.imageUrl) {
+				return { content: [{ type: "text", text: "无法生成截图链接" }] };
 			}
 			return { 
 				content: [{ 
-					type: "image", 
-					data: result.data, 
-					mimeType: "image/png" 
+					type: "text", 
+					text: `截图生成成功！访问链接：https://${env.host}${result.imageUrl}` 
 				}],
 				_meta: {},
 				structuredContent: {}
@@ -273,6 +272,36 @@ app.get('/api/screenshot/:pageId', async (c) => {
             message: `服务器错误：${error}`,
             data: null
         });
+    }
+});
+
+// 新增路由 - 提供截图服务
+app.get('/image/:screenshotId', async (c) => {
+    try {
+        const screenshotId = c.req.param('screenshotId');
+        
+        // 验证输入参数
+        if (!screenshotId) {
+            return c.text('截图ID不能为空', 400);
+        }
+        
+        // 从KV获取截图数据
+        const screenshotKey = `screenshot_${screenshotId}`;
+        const imageData = await env.KV.get(screenshotKey);
+        
+        if (!imageData) {
+            return c.text('截图不存在', 404);
+        }
+        
+        // 将base64转换为二进制数据
+        const buffer = Buffer.from(imageData, 'base64');
+        
+        // 设置正确的响应头并返回图片
+        c.header('Content-Type', 'image/png');
+        c.header('Cache-Control', 'public, max-age=86400'); // 缓存1天
+        return c.body(buffer);
+    } catch (error) {
+        return c.text(`服务器错误：${error}`, 500);
     }
 });
 

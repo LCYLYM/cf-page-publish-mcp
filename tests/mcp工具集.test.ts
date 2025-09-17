@@ -34,7 +34,8 @@ vi.mock('../src/kv', () => ({
 
 // 模拟HTML转图片模块
 vi.mock('../src/html2image', () => ({
-  htmlToImageByKvKey: vi.fn()
+  htmlToImageByKvKey: vi.fn(),
+  generateScreenshotUrl: vi.fn()
 }))
 
 // 模拟Cloudflare环境
@@ -61,10 +62,13 @@ vi.mock('../src/html/mainPage', () => ({
 
 import { MyMCP } from '../src/index'
 import { KV } from '../src/kv'
-import { htmlToImageByKvKey } from '../src/html2image'
+import { htmlToImageByKvKey, generateScreenshotUrl } from '../src/html2image'
 
 const mockKV = KV as any
-const mockHtmlToImage = { htmlToImageByKvKey }
+const mockHtmlToImage = { 
+  htmlToImageByKvKey: htmlToImageByKvKey as any, 
+  generateScreenshotUrl: generateScreenshotUrl as any 
+}
 
 describe('MCP工具集功能测试', () => {
   let mcpInstance: MyMCP
@@ -72,7 +76,7 @@ describe('MCP工具集功能测试', () => {
   beforeEach(() => {
     // 每个测试前重置mock和创建新实例
     vi.clearAllMocks()
-    mcpInstance = new MyMCP()
+    mcpInstance = new (MyMCP as any)()
   })
 
   describe('MCP服务器初始化', () => {
@@ -167,13 +171,13 @@ describe('MCP工具集功能测试', () => {
     it('应该成功获取页面图片', async () => {
       // 准备测试数据
       const testData = { pageId: 'CeShiYeMianABCDEFGH' }
-      const mockImageData = 'base64-image-data'
+      const mockImageUrl = '/image/abc123'
       
-      // 模拟htmlToImageByKvKey成功
-      mockHtmlToImage.htmlToImageByKvKey.mockResolvedValue({
+      // 模拟generateScreenshotUrl成功
+      mockHtmlToImage.generateScreenshotUrl.mockResolvedValue({
         state: true,
-        message: '成功获取页面图像',
-        data: mockImageData
+        message: '成功生成截图链接',
+        imageUrl: mockImageUrl
       })
       
       // 获取获取页面图片工具的处理函数
@@ -186,18 +190,17 @@ describe('MCP工具集功能测试', () => {
       const result = await imageHandler(testData)
       
       // 验证结果
-      expect(result.content[0].type).toBe('image')
-      expect(result.content[0].data).toBe(mockImageData)
-      expect(result.content[0].mimeType).toBe('image/png')
-      expect(mockHtmlToImage.htmlToImageByKvKey).toHaveBeenCalledWith(testData.pageId)
+      expect(result.content[0].type).toBe('text')
+      expect(result.content[0].text).toContain('截图生成成功！访问链接：https://test.example.com/image/abc123')
+      expect(mockHtmlToImage.generateScreenshotUrl).toHaveBeenCalledWith(testData.pageId)
     })
 
     it('应该处理页面不存在的情况', async () => {
       // 准备测试数据
       const testData = { pageId: 'nonexistent' }
       
-      // 模拟htmlToImageByKvKey失败
-      mockHtmlToImage.htmlToImageByKvKey.mockResolvedValue({
+      // 模拟generateScreenshotUrl失败
+      mockHtmlToImage.generateScreenshotUrl.mockResolvedValue({
         state: false,
         message: '页面不存在'
       })
