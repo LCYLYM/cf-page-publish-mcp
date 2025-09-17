@@ -7,7 +7,8 @@ import { describe, it, expect, vi, beforeEach } from 'vitest'
 
 // 模拟dependencies
 vi.mock('../src/html2image', () => ({
-  htmlToImageByKvKey: vi.fn()
+  htmlToImageByKvKey: vi.fn(),
+  htmlToImageUrlByKvKey: vi.fn()
 }))
 
 vi.mock('../src/kv', () => ({
@@ -27,7 +28,7 @@ vi.mock('cloudflare:workers', () => ({
   }
 }))
 
-import { htmlToImageByKvKey } from '../src/html2image'
+import { htmlToImageByKvKey, htmlToImageUrlByKvKey } from '../src/html2image'
 
 describe('MCP Screenshot Tool Verification', () => {
   beforeEach(() => {
@@ -37,81 +38,63 @@ describe('MCP Screenshot Tool Verification', () => {
   describe('获取页面图片 MCP Tool', () => {
     it('应该能正确处理有效的pageId参数', async () => {
       const testPageId = 'test-page-123'
-      const mockImageData = 'base64-encoded-image-data'
+      const mockImageUrl = '/image/img_test-page-123_abc123'
       
-      // 模拟htmlToImageByKvKey返回成功结果
-      const mockHtmlToImage = htmlToImageByKvKey as any
-      mockHtmlToImage.mockResolvedValue({
+      // 模拟htmlToImageUrlByKvKey返回成功结果
+      const mockHtmlToImageUrl = htmlToImageUrlByKvKey as any
+      mockHtmlToImageUrl.mockResolvedValue({
         state: true,
-        message: '成功获取页面图像',
-        data: mockImageData
+        message: '成功生成页面图片链接',
+        data: mockImageUrl
       })
       
-      // 模拟MCP工具调用
+      // 模拟MCP工具调用（新的URL版本）
       const toolHandler = async ({ pageId }: { pageId: string }) => {
-        const result = await htmlToImageByKvKey(pageId)
+        const result = await htmlToImageUrlByKvKey(pageId)
         if (!result.state) {
           return { content: [{ type: "text", text: result.message }] }
         }
         if (!result.data) {
-          return { content: [{ type: "text", text: "无法获取页面图片" }] }
+          return { content: [{ type: "text", text: "无法获取页面图片链接" }] }
         }
-        return { 
-          content: [{ 
-            type: "image", 
-            data: result.data, 
-            mimeType: "image/png" 
-          }],
-          _meta: {},
-          structuredContent: {}
-        }
+        return { content: [{ type: "text", text: `图片链接：${result.data}` }] }
       }
       
       // 执行测试
       const result = await toolHandler({ pageId: testPageId })
       
       // 验证结果
-      expect(mockHtmlToImage).toHaveBeenCalledWith(testPageId)
-      expect(result.content[0].type).toBe('image')
-      expect(result.content[0].data).toBe(mockImageData)
-      expect(result.content[0].mimeType).toBe('image/png')
+      expect(mockHtmlToImageUrl).toHaveBeenCalledWith(testPageId)
+      expect(result.content[0].type).toBe('text')
+      expect(result.content[0].text).toBe(`图片链接：${mockImageUrl}`)
     })
 
     it('应该处理页面不存在的情况', async () => {
       const testPageId = 'nonexistent-page'
       
-      // 模拟htmlToImageByKvKey返回失败结果
-      const mockHtmlToImage = htmlToImageByKvKey as any
-      mockHtmlToImage.mockResolvedValue({
+      // 模拟htmlToImageUrlByKvKey返回失败结果
+      const mockHtmlToImageUrl = htmlToImageUrlByKvKey as any
+      mockHtmlToImageUrl.mockResolvedValue({
         state: false,
         message: '页面不存在'
       })
       
-      // 模拟MCP工具调用
+      // 模拟MCP工具调用（新的URL版本）
       const toolHandler = async ({ pageId }: { pageId: string }) => {
-        const result = await htmlToImageByKvKey(pageId)
+        const result = await htmlToImageUrlByKvKey(pageId)
         if (!result.state) {
           return { content: [{ type: "text", text: result.message }] }
         }
         if (!result.data) {
-          return { content: [{ type: "text", text: "无法获取页面图片" }] }
+          return { content: [{ type: "text", text: "无法获取页面图片链接" }] }
         }
-        return { 
-          content: [{ 
-            type: "image", 
-            data: result.data, 
-            mimeType: "image/png" 
-          }],
-          _meta: {},
-          structuredContent: {}
-        }
+        return { content: [{ type: "text", text: `图片链接：${result.data}` }] }
       }
       
       // 执行测试
       const result = await toolHandler({ pageId: testPageId })
       
       // 验证结果
-      expect(mockHtmlToImage).toHaveBeenCalledWith(testPageId)
       expect(result.content[0].type).toBe('text')
       expect(result.content[0].text).toBe('页面不存在')
     })
@@ -119,41 +102,32 @@ describe('MCP Screenshot Tool Verification', () => {
     it('应该处理数据为空的情况', async () => {
       const testPageId = 'empty-data-page'
       
-      // 模拟htmlToImageByKvKey返回成功但数据为空
-      const mockHtmlToImage = htmlToImageByKvKey as any
-      mockHtmlToImage.mockResolvedValue({
+      // 模拟htmlToImageUrlByKvKey返回成功但数据为空
+      const mockHtmlToImageUrl = htmlToImageUrlByKvKey as any
+      mockHtmlToImageUrl.mockResolvedValue({
         state: true,
-        message: '成功获取页面图像',
+        message: '成功生成页面图片链接',
         data: null
       })
       
-      // 模拟MCP工具调用
+      // 模拟MCP工具调用（新的URL版本）
       const toolHandler = async ({ pageId }: { pageId: string }) => {
-        const result = await htmlToImageByKvKey(pageId)
+        const result = await htmlToImageUrlByKvKey(pageId)
         if (!result.state) {
           return { content: [{ type: "text", text: result.message }] }
         }
         if (!result.data) {
-          return { content: [{ type: "text", text: "无法获取页面图片" }] }
+          return { content: [{ type: "text", text: "无法获取页面图片链接" }] }
         }
-        return { 
-          content: [{ 
-            type: "image", 
-            data: result.data, 
-            mimeType: "image/png" 
-          }],
-          _meta: {},
-          structuredContent: {}
-        }
+        return { content: [{ type: "text", text: `图片链接：${result.data}` }] }
       }
       
       // 执行测试
       const result = await toolHandler({ pageId: testPageId })
       
       // 验证结果
-      expect(mockHtmlToImage).toHaveBeenCalledWith(testPageId)
       expect(result.content[0].type).toBe('text')
-      expect(result.content[0].text).toBe('无法获取页面图片')
+      expect(result.content[0].text).toBe('无法获取页面图片链接')
     })
   })
 })
