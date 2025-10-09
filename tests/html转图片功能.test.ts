@@ -63,16 +63,16 @@ describe('HTML转图片功能测试', () => {
       expect(htmlToImageByKvKey.length).toBe(1)
     })
 
-    it('应该处理页面不存在的情况', async () => {
+    it('应该处理Page does not exist的情况', async () => {
       const pageId = 'nonexistent'
       
       // 模拟KV返回没有data的结果
-      mockKV.get.mockResolvedValue({ state: false, message: '页面不存在', data: null })
+      mockKV.get.mockResolvedValue({ state: false, message: 'Page does not exist', data: null })
       
       const result = await htmlToImageByKvKey(pageId)
       
       expect(result.state).toBe(false)
-      expect(result.message).toBe('页面不存在')
+      expect(result.message).toBe('Page does not exist')
       expect(mockKV.get).toHaveBeenCalledWith(pageId)
     })
 
@@ -80,12 +80,12 @@ describe('HTML转图片功能测试', () => {
       const pageId = 'empty'
       
       // 模拟KV返回没有data的结果
-      mockKV.get.mockResolvedValue({ state: false, message: '页面不存在', data: undefined })
+      mockKV.get.mockResolvedValue({ state: false, message: 'Page does not exist', data: undefined })
       
       const result = await htmlToImageByKvKey(pageId)
       
       expect(result.state).toBe(false)
-      expect(result.message).toBe('页面不存在')
+      expect(result.message).toBe('Page does not exist')
     })
   })
 })

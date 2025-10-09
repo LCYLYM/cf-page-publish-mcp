@@ -34,7 +34,7 @@ describe('Screenshot API Tests', () => {
     const mockHtmlToImage = htmlToImageByKvKey as any
     mockHtmlToImage.mockResolvedValue({
       state: true,
-      message: '成功获取页面图像',
+      message: 'Successfully generated page screenshot',
       data: mockImageData
     })
     
@@ -43,19 +43,19 @@ describe('Screenshot API Tests', () => {
     
     // 验证结果
     expect(result.state).toBe(true)
-    expect(result.message).toBe('成功获取页面图像')
+    expect(result.message).toBe('Successfully generated page screenshot')
     expect(result.data).toBe(mockImageData)
     expect(mockHtmlToImage).toHaveBeenCalledWith(testPageId)
   })
 
-  it('应该处理页面不存在的情况', async () => {
+  it('应该处理Page does not exist的情况', async () => {
     const testPageId = 'nonexistent'
     
-    // 模拟页面不存在的响应
+    // 模拟Page does not exist的响应
     const mockHtmlToImage = htmlToImageByKvKey as any
     mockHtmlToImage.mockResolvedValue({
       state: false,
-      message: '页面不存在'
+      message: 'Page does not exist'
     })
     
     // 测试函数调用
@@ -63,7 +63,7 @@ describe('Screenshot API Tests', () => {
     
     // 验证结果
     expect(result.state).toBe(false)
-    expect(result.message).toBe('页面不存在')
+    expect(result.message).toBe('Page does not exist')
     expect(result.data).toBeUndefined()
   })
 
