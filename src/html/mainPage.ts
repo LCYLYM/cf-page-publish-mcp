@@ -342,6 +342,82 @@ export const mainPageHtml = `<!DOCTYPE html>
             100% { transform: rotate(360deg); }
         }
         
+        /* 统计信息样式 */
+        .stats-section {
+            margin: 40px 0;
+            padding: 30px;
+            background: linear-gradient(135deg, var(--hover-bg), var(--bg-color));
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+        }
+        
+        .stats-title {
+            text-align: center;
+            font-size: 1.5rem;
+            margin-bottom: 30px;
+            font-weight: 600;
+        }
+        
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+        }
+        
+        .stat-card {
+            background-color: var(--bg-color);
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            padding: 24px;
+            text-align: center;
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+        
+        .stat-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+        }
+        
+        .stat-icon {
+            font-size: 2.5rem;
+            margin-bottom: 12px;
+        }
+        
+        .stat-value {
+            font-size: 2.5rem;
+            font-weight: bold;
+            margin-bottom: 8px;
+            background: linear-gradient(135deg, var(--accent-color), var(--text-color));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+        
+        .stat-label {
+            font-size: 1rem;
+            opacity: 0.7;
+            font-weight: 500;
+        }
+        
+        .admin-link {
+            text-align: center;
+            margin-top: 20px;
+        }
+        
+        .admin-link a {
+            color: var(--text-color);
+            text-decoration: none;
+            padding: 8px 16px;
+            border: 1px solid var(--border-color);
+            border-radius: 6px;
+            display: inline-block;
+            transition: all 0.2s;
+        }
+        
+        .admin-link a:hover {
+            background-color: var(--hover-bg);
+        }
+        
         /* 响应式设计 */
         @media (max-width: 768px) {
             .hero h1 {
@@ -385,6 +461,31 @@ export const mainPageHtml = `<!DOCTYPE html>
             <h1>HTML页面管理器</h1>
             <p class="subtitle">简洁高效的页面发布工具</p>
             <p class="description">创建、编辑和管理您的HTML页面，支持实时预览和一键发布</p>
+        </div>
+        
+        <!-- 统计信息区域 -->
+        <div class="stats-section">
+            <h2 class="stats-title">📊 网站统计</h2>
+            <div class="stats-grid">
+                <div class="stat-card">
+                    <div class="stat-icon">👥</div>
+                    <div class="stat-value" id="visitorCount">-</div>
+                    <div class="stat-label">访客总数</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-icon">📄</div>
+                    <div class="stat-value" id="pageCount">-</div>
+                    <div class="stat-label">页面总数</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-icon">📸</div>
+                    <div class="stat-value" id="screenshotCount">-</div>
+                    <div class="stat-label">截图总数</div>
+                </div>
+            </div>
+            <div class="admin-link">
+                <a href="/admin">🔐 进入后台管理</a>
+            </div>
         </div>
         
         <!-- 导航标签 -->
@@ -920,11 +1021,48 @@ export const mainPageHtml = `<!DOCTYPE html>
             }
         }
         
+        // 加载统计信息
+        async function loadStatistics() {
+            try {
+                const response = await fetch('/api/stats');
+                const result = await response.json();
+                
+                if (result.state && result.data) {
+                    document.getElementById('visitorCount').textContent = result.data.visitorCount;
+                    document.getElementById('pageCount').textContent = result.data.pageCount;
+                    document.getElementById('screenshotCount').textContent = result.data.screenshotCount;
+                }
+            } catch (error) {
+                console.error('加载统计信息失败:', error);
+            }
+        }
+        
+        // 增加访客计数
+        async function incrementVisitor() {
+            try {
+                await fetch('/api/visitor', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' }
+                });
+            } catch (error) {
+                console.error('更新访客计数失败:', error);
+            }
+        }
+        
         // 页面加载时的初始化
         document.addEventListener('DOMContentLoaded', function() {
             // 为HTML编辑器添加实时预览
             document.getElementById('htmlEditor').addEventListener('input', updatePreview);
             document.getElementById('editHtmlEditor').addEventListener('input', updateEditPreview);
+            
+            // 加载统计信息
+            loadStatistics();
+            
+            // 增加访客计数（仅首次访问时）
+            if (!sessionStorage.getItem('visited')) {
+                incrementVisitor();
+                sessionStorage.setItem('visited', 'true');
+            }
         });
     </script>
 </body>
