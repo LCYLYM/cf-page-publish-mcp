@@ -2,7 +2,7 @@ import puppeteer from '@cloudflare/puppeteer';
 import { env } from 'cloudflare:workers';
 import { KV } from './kv';
 
-// 生成随机截图ID
+// Generate random screenshot ID
 function generateScreenshotId(): string {
   const chars = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
   let result = '';
@@ -15,12 +15,32 @@ function generateScreenshotId(): string {
 export async function html2image(html: string): Promise<string> {
   const browser = await puppeteer.launch(env.MYBROWSER);
   const page = await browser.newPage();
-  await page.setContent(html);
-  await page.waitForNetworkIdle();
-  // 使用fullPage选项来获取完整页面截图
-  const buffer = await page.screenshot({ fullPage: true });
+  
+  // Set viewport to 1920x1080 (16:9 aspect ratio) for proper screenshot width
+  await page.setViewport({
+    width: 1920,
+    height: 1080,
+    deviceScaleFactor: 1
+  });
+  
+  // Set default navigation timeout
+  page.setDefaultTimeout(30000);
+  
+  await page.setContent(html, { 
+    waitUntil: 'networkidle0',
+    timeout: 30000 // 30 second timeout
+  });
+  
+  // Take full page screenshot with quality optimization
+  const buffer = await page.screenshot({ 
+    fullPage: true,
+    type: 'jpeg', // Use JPEG for better compression and smaller file size
+    quality: 80 // Balance between quality and file size
+  });
+  
   await browser.close();
-  // 确保buffer是Uint8Array类型
+  
+  // Convert buffer to base64
   const base64String = Buffer.from(buffer).toString('base64');
   return base64String;
 }
@@ -30,46 +50,46 @@ export async function htmlToImageByKvKey(key: string): Promise<{state: boolean, 
   if(!html.data){
     return {
         state:false,
-        message:'页面不存在'
+        message:'Page does not exist'
     }
   }
   return {
     state:true,
-    message:'成功获取页面图像',
+    message:'Successfully generated page screenshot',
     data:await html2image(html.data)
   }
 }
 
-// 新函数：生成截图并返回访问URL
+// Generate screenshot and return access URL
 export async function generateScreenshotUrl(pageId: string): Promise<{state: boolean, message: string, imageUrl?: string}> {
   const html = await KV.get(pageId);
   if (!html.data) {
     return {
       state: false,
-      message: '页面不存在'
+      message: 'Page does not exist'
     };
   }
 
   try {
-    // 生成截图
+    // Generate screenshot
     const base64Image = await html2image(html.data);
     
-    // 生成唯一的截图ID
+    // Generate unique screenshot ID
     const screenshotId = generateScreenshotId();
     
-    // 将截图存储到KV中，使用特殊前缀来区分截图数据
+    // Store screenshot in KV with special prefix to distinguish screenshot data
     const screenshotKey = `screenshot_${screenshotId}`;
     await env.KV.put(screenshotKey, base64Image);
     
     return {
       state: true,
-      message: '成功生成截图链接',
+      message: 'Screenshot URL generated successfully',
       imageUrl: `/image/${screenshotId}`
     };
   } catch (error) {
     return {
       state: false,
-      message: `截图生成失败：${error}`
+      message: `Screenshot generation failed: ${error}`
     };
   }
 }

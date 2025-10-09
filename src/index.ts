@@ -19,8 +19,8 @@ export class MyMCP extends McpAgent {
 	async init(): Promise<void> {
 
 	this.server.tool(
-		"页面发布工具",
-		"创建html页面并且返回网页url，需要提供两个参数，pagetitle是页面的题目，然后pagecontent是页面的html内容",
+		"publish_page",
+		"Create an HTML page and return its public URL. This tool requires two parameters: 'pagetitle' (the page title) and 'pagehtml' (the complete HTML content of the page). The tool will store the page in Cloudflare KV storage and return a publicly accessible URL where the page can be viewed.",
 		{
 			pagetitle: z.string(),
 			pagehtml: z.string()
@@ -30,13 +30,13 @@ export class MyMCP extends McpAgent {
 			if (!result.state) {
 				return { content: [{ type: "text", text: result.message }] };
 			}
-			return { content: [{ type: "text", text: `页面创建成功，访问URL：https://${env.host}/pages/${result.data?.key}` }] };
+			return { content: [{ type: "text", text: `Page created successfully. Access URL: https://${env.host}/pages/${result.data?.key}` }] };
 		}
 	);
 
 	this.server.tool(
-		"获取页面图片",
-		"根据页面ID生成完整页面截图并返回访问链接，页面id就是页面发布工具返回的pages/后面的那一段。返回的是可直接访问的图片链接，支持完整页面截图（包括滚动内容）",
+		"get_page_screenshot",
+		"Generate a full-page screenshot of a published page and return a publicly accessible image URL. This tool requires the 'pageId' parameter, which is the identifier returned after the page path '/pages/' when using the publish_page tool. The screenshot captures the entire page content including scrollable areas, with a viewport resolution of 1920x1080 (16:9 aspect ratio) for optimal viewing. The returned URL can be directly accessed to view or download the screenshot image.",
 		{
 			pageId: z.string()
 		},
@@ -46,12 +46,12 @@ export class MyMCP extends McpAgent {
 				return { content: [{ type: "text", text: result.message }] };
 			}
 			if (!result.imageUrl) {
-				return { content: [{ type: "text", text: "无法生成截图链接" }] };
+				return { content: [{ type: "text", text: "Failed to generate screenshot URL" }] };
 			}
 			return { 
 				content: [{ 
 					type: "text", 
-					text: `截图生成成功！访问链接：https://${env.host}${result.imageUrl}` 
+					text: `Screenshot generated successfully! Access URL: https://${env.host}${result.imageUrl}` 
 				}],
 				_meta: {},
 				structuredContent: {}
@@ -60,8 +60,8 @@ export class MyMCP extends McpAgent {
 	);
 
 	this.server.tool(
-		"页面更新工具",
-		"通过页面ID更新已有页面的HTML内容，需要提供页面ID、新的页面标题和新的HTML内容",
+		"update_page",
+		"Update the HTML content of an existing published page. This tool requires three parameters: 'pageId' (the unique identifier of the page to update), 'pagetitle' (the new page title), and 'pagehtml' (the new complete HTML content). After successful update, the page will be immediately accessible at its original URL with the updated content.",
 		{
 			pageId: z.string(),
 			pagetitle: z.string(),
@@ -72,13 +72,13 @@ export class MyMCP extends McpAgent {
 			if (!result.state) {
 				return { content: [{ type: "text", text: result.message }] };
 			}
-			return { content: [{ type: "text", text: `页面更新成功，访问URL：https://${env.host}/pages/${pageId}` }] };
+			return { content: [{ type: "text", text: `Page updated successfully. Access URL: https://${env.host}/pages/${pageId}` }] };
 		}
 	);
 
 	this.server.tool(
-		"页面删除工具",
-		"通过页面ID删除已有页面，需要提供页面ID",
+		"delete_page",
+		"Delete an existing published page permanently from storage. This tool requires the 'pageId' parameter (the unique identifier of the page to delete). Once deleted, the page and its content will be permanently removed and the page URL will no longer be accessible. This action cannot be undone.",
 		{
 			pageId: z.string()
 		},
@@ -87,13 +87,13 @@ export class MyMCP extends McpAgent {
 			if (!result.state) {
 				return { content: [{ type: "text", text: result.message }] };
 			}
-			return { content: [{ type: "text", text: "页面删除成功" }] };
+			return { content: [{ type: "text", text: "Page deleted successfully" }] };
 		}
 	);
 
 	this.server.tool(
-		"获取页面代码",
-		"通过页面ID获取页面的HTML代码",
+		"get_page_code",
+		"Retrieve the complete HTML source code of a published page. This tool requires the 'pageId' parameter (the unique identifier of the page). It returns the full HTML content that was originally published or last updated for the specified page. This is useful for inspecting, backing up, or analyzing the page content.",
 		{
 			pageId: z.string()
 		},
@@ -103,7 +103,7 @@ export class MyMCP extends McpAgent {
 				return { content: [{ type: "text", text: result.message }] };
 			}
 			if (!result.data) {
-				return { content: [{ type: "text", text: "页面不存在" }] };
+				return { content: [{ type: "text", text: "Page does not exist" }] };
 			}
 			return { content: [{ type: "text", text: result.data }] };
 		}
@@ -297,7 +297,7 @@ app.get('/image/:screenshotId', async (c) => {
         const buffer = Buffer.from(imageData, 'base64');
         
         // 设置正确的响应头并返回图片
-        c.header('Content-Type', 'image/png');
+        c.header('Content-Type', 'image/jpeg');
         c.header('Cache-Control', 'public, max-age=86400'); // 缓存1天
         return c.body(buffer);
     } catch (error) {

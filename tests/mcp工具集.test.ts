@@ -97,11 +97,11 @@ describe('MCP工具集功能测试', () => {
       const toolCalls = (mcpInstance.server.tool as any).mock.calls
       const toolNames = toolCalls.map((call: any) => call[0])
       
-      expect(toolNames).toContain('页面发布工具')
-      expect(toolNames).toContain('获取页面图片')
-      expect(toolNames).toContain('页面更新工具')
-      expect(toolNames).toContain('页面删除工具')
-      expect(toolNames).toContain('获取页面代码')
+      expect(toolNames).toContain('publish_page')
+      expect(toolNames).toContain('get_page_screenshot')
+      expect(toolNames).toContain('update_page')
+      expect(toolNames).toContain('delete_page')
+      expect(toolNames).toContain('get_page_code')
     })
   })
 
@@ -123,7 +123,7 @@ describe('MCP工具集功能测试', () => {
       // 获取页面发布工具的处理函数
       await mcpInstance.init()
       const toolCalls = (mcpInstance.server.tool as any).mock.calls
-      const publishToolCall = toolCalls.find((call: any) => call[0] === '页面发布工具')
+      const publishToolCall = toolCalls.find((call: any) => call[0] === 'publish_page')
       const publishHandler = publishToolCall[3]
       
       // 执行测试
@@ -131,7 +131,7 @@ describe('MCP工具集功能测试', () => {
       
       // 验证结果
       expect(result.content[0].type).toBe('text')
-      expect(result.content[0].text).toContain('页面创建成功')
+      expect(result.content[0].text).toContain('Page created successfully')
       expect(result.content[0].text).toContain('https://test.example.com/pages/CeShiYeMianABCDEFGH')
       expect(mockKV.put).toHaveBeenCalledWith({
         title: testData.pagetitle,
@@ -155,7 +155,7 @@ describe('MCP工具集功能测试', () => {
       // 获取页面发布工具的处理函数
       await mcpInstance.init()
       const toolCalls = (mcpInstance.server.tool as any).mock.calls
-      const publishToolCall = toolCalls.find((call: any) => call[0] === '页面发布工具')
+      const publishToolCall = toolCalls.find((call: any) => call[0] === 'publish_page')
       const publishHandler = publishToolCall[3]
       
       // 执行测试
@@ -176,14 +176,14 @@ describe('MCP工具集功能测试', () => {
       // 模拟generateScreenshotUrl成功
       mockHtmlToImage.generateScreenshotUrl.mockResolvedValue({
         state: true,
-        message: '成功生成截图链接',
+        message: 'Screenshot URL generated successfully',
         imageUrl: mockImageUrl
       })
       
       // 获取获取页面图片工具的处理函数
       await mcpInstance.init()
       const toolCalls = (mcpInstance.server.tool as any).mock.calls
-      const imageToolCall = toolCalls.find((call: any) => call[0] === '获取页面图片')
+      const imageToolCall = toolCalls.find((call: any) => call[0] === 'get_page_screenshot')
       const imageHandler = imageToolCall[3]
       
       // 执行测试
@@ -191,7 +191,7 @@ describe('MCP工具集功能测试', () => {
       
       // 验证结果
       expect(result.content[0].type).toBe('text')
-      expect(result.content[0].text).toContain('截图生成成功！访问链接：https://test.example.com/image/abc123')
+      expect(result.content[0].text).toContain('Screenshot generated successfully! Access URL: https://test.example.com/image/abc123')
       expect(mockHtmlToImage.generateScreenshotUrl).toHaveBeenCalledWith(testData.pageId)
     })
 
@@ -202,13 +202,13 @@ describe('MCP工具集功能测试', () => {
       // 模拟generateScreenshotUrl失败
       mockHtmlToImage.generateScreenshotUrl.mockResolvedValue({
         state: false,
-        message: '页面不存在'
+        message: 'Page does not exist'
       })
       
       // 获取获取页面图片工具的处理函数
       await mcpInstance.init()
       const toolCalls = (mcpInstance.server.tool as any).mock.calls
-      const imageToolCall = toolCalls.find((call: any) => call[0] === '获取页面图片')
+      const imageToolCall = toolCalls.find((call: any) => call[0] === 'get_page_screenshot')
       const imageHandler = imageToolCall[3]
       
       // 执行测试
@@ -216,7 +216,7 @@ describe('MCP工具集功能测试', () => {
       
       // 验证结果
       expect(result.content[0].type).toBe('text')
-      expect(result.content[0].text).toBe('页面不存在')
+      expect(result.content[0].text).toBe('Page does not exist')
     })
   })
 
@@ -239,7 +239,7 @@ describe('MCP工具集功能测试', () => {
       // 获取页面更新工具的处理函数
       await mcpInstance.init()
       const toolCalls = (mcpInstance.server.tool as any).mock.calls
-      const updateToolCall = toolCalls.find((call: any) => call[0] === '页面更新工具')
+      const updateToolCall = toolCalls.find((call: any) => call[0] === 'update_page')
       const updateHandler = updateToolCall[3]
       
       // 执行测试
@@ -247,7 +247,7 @@ describe('MCP工具集功能测试', () => {
       
       // 验证结果
       expect(result.content[0].type).toBe('text')
-      expect(result.content[0].text).toContain('页面更新成功')
+      expect(result.content[0].text).toContain('Page updated successfully')
       expect(result.content[0].text).toContain(`https://test.example.com/pages/${testData.pageId}`)
       expect(mockKV.update).toHaveBeenCalledWith(testData.pageId, {
         title: testData.pagetitle,
@@ -270,7 +270,7 @@ describe('MCP工具集功能测试', () => {
       // 获取页面删除工具的处理函数
       await mcpInstance.init()
       const toolCalls = (mcpInstance.server.tool as any).mock.calls
-      const deleteToolCall = toolCalls.find((call: any) => call[0] === '页面删除工具')
+      const deleteToolCall = toolCalls.find((call: any) => call[0] === 'delete_page')
       const deleteHandler = deleteToolCall[3]
       
       // 执行测试
@@ -278,7 +278,7 @@ describe('MCP工具集功能测试', () => {
       
       // 验证结果
       expect(result.content[0].type).toBe('text')
-      expect(result.content[0].text).toBe('页面删除成功')
+      expect(result.content[0].text).toBe('Page deleted successfully')
       expect(mockKV.delete).toHaveBeenCalledWith(testData.pageId)
     })
   })
@@ -299,7 +299,7 @@ describe('MCP工具集功能测试', () => {
       // 获取获取页面代码工具的处理函数
       await mcpInstance.init()
       const toolCalls = (mcpInstance.server.tool as any).mock.calls
-      const getCodeToolCall = toolCalls.find((call: any) => call[0] === '获取页面代码')
+      const getCodeToolCall = toolCalls.find((call: any) => call[0] === 'get_page_code')
       const getCodeHandler = getCodeToolCall[3]
       
       // 执行测试
@@ -325,7 +325,7 @@ describe('MCP工具集功能测试', () => {
       // 获取获取页面代码工具的处理函数
       await mcpInstance.init()
       const toolCalls = (mcpInstance.server.tool as any).mock.calls
-      const getCodeToolCall = toolCalls.find((call: any) => call[0] === '获取页面代码')
+      const getCodeToolCall = toolCalls.find((call: any) => call[0] === 'get_page_code')
       const getCodeHandler = getCodeToolCall[3]
       
       // 执行测试
@@ -333,7 +333,7 @@ describe('MCP工具集功能测试', () => {
       
       // 验证结果
       expect(result.content[0].type).toBe('text')
-      expect(result.content[0].text).toBe('页面不存在')
+      expect(result.content[0].text).toBe('Page does not exist')
     })
   })
 })
