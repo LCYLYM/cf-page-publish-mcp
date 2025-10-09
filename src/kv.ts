@@ -4,7 +4,9 @@ export const KV={
     put,
     get,
     update,
-    delete: deleteKey
+    delete: deleteKey,
+    list: listKeys,
+    getStats: getStatistics
 
 }
 
@@ -135,4 +137,63 @@ function generateRandomString(long:number): string {
     result += chars.charAt(Math.floor(Math.random() * chars.length));
   }
   return result;
+}
+
+// 列出所有键值
+async function listKeys(prefix?: string, limit?: number): Promise<{state: boolean, message: string, data?: {keys: string[]}}> {
+    try {
+        const listOptions: {prefix?: string, limit?: number} = {};
+        if (prefix) listOptions.prefix = prefix;
+        if (limit) listOptions.limit = limit;
+        
+        const list = await env.KV.list(listOptions);
+        const keys = list.keys.map(k => k.name);
+        
+        return {
+            state: true,
+            message: '获取列表成功',
+            data: {
+                keys
+            }
+        };
+    } catch (error) {
+        return {
+            state: false,
+            message: `获取列表失败，info：${error}`
+        };
+    }
+}
+
+// 获取统计信息
+async function getStatistics(): Promise<{state: boolean, message: string, data?: {pageCount: number, screenshotCount: number, visitorCount: number}}> {
+    try {
+        // 获取所有键
+        const allKeys = await env.KV.list();
+        
+        // 区分页面和截图
+        const pageKeys = allKeys.keys.filter(k => !k.name.startsWith('screenshot_') && !k.name.startsWith('stats_'));
+        const screenshotKeys = allKeys.keys.filter(k => k.name.startsWith('screenshot_'));
+        
+        // 获取或初始化访客计数
+        let visitorCount = 0;
+        const visitorData = await env.KV.get('stats_visitor_count');
+        if (visitorData) {
+            visitorCount = Number.parseInt(visitorData) || 0;
+        }
+        
+        return {
+            state: true,
+            message: '获取统计信息成功',
+            data: {
+                pageCount: pageKeys.length,
+                screenshotCount: screenshotKeys.length,
+                visitorCount
+            }
+        };
+    } catch (error) {
+        return {
+            state: false,
+            message: `获取统计信息失败，info：${error}`
+        };
+    }
 }

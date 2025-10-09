@@ -7,6 +7,7 @@ import { env } from "cloudflare:workers";
 import { html } from "hono/html";
 import { htmlToImageByKvKey, generateScreenshotUrl } from "./html2image";
 import { mainPageHtml } from './html/mainPage';
+import { adminPageHtml } from './html/adminPage';
 
 export class MyMCP extends McpAgent {
 	server = new McpServer({
@@ -122,6 +123,11 @@ app.mount('/mcp', MyMCP.serve('/mcp').fetch, { replaceRequest: false} )
 // 首页路由 - 显示HTML编辑器
 app.get('/', async (c) => {
     return c.html(mainPageHtml);
+});
+
+// 管理员页面路由
+app.get('/admin', async (c) => {
+    return c.html(adminPageHtml);
 });
 
 // API路由 - 处理页面发布请求
@@ -266,6 +272,146 @@ app.get('/api/screenshot/:pageId', async (c) => {
         const result = await htmlToImageByKvKey(pageId);
         
         return c.json(result);
+    } catch (error) {
+        return c.json({
+            state: false,
+            message: `服务器错误：${error}`,
+            data: null
+        });
+    }
+});
+
+// API路由 - 获取统计信息
+app.get('/api/stats', async (c) => {
+    try {
+        const stats = await KV.getStats();
+        return c.json(stats);
+    } catch (error) {
+        return c.json({
+            state: false,
+            message: `服务器错误：${error}`,
+            data: null
+        });
+    }
+});
+
+// API路由 - 增加访客计数
+app.post('/api/visitor', async (c) => {
+    try {
+        // 获取当前访客计数
+        let count = 0;
+        const currentCount = await env.KV.get('stats_visitor_count');
+        if (currentCount) {
+            count = Number.parseInt(currentCount) || 0;
+        }
+        
+        // 增加计数
+        count++;
+        await env.KV.put('stats_visitor_count', count.toString());
+        
+        return c.json({
+            state: true,
+            message: '访客计数已更新',
+            data: { count }
+        });
+    } catch (error) {
+        return c.json({
+            state: false,
+            message: `服务器错误：${error}`,
+            data: null
+        });
+    }
+});
+
+// API路由 - 获取页面列表（管理员功能）
+app.post('/api/admin/list', async (c) => {
+    try {
+        const { password } = await c.req.json();
+        
+        // 验证密码
+        if (password !== 'lcy') {
+            return c.json({
+                state: false,
+                message: '密码错误',
+                data: null
+            });
+        }
+        
+        // 获取所有键
+        const allKeys = await env.KV.list();
+        
+        // 区分页面和截图，过滤掉统计数据
+        const pages = [];
+        const screenshots = [];
+        
+        for (const key of allKeys.keys) {
+            if (key.name.startsWith('screenshot_')) {
+                screenshots.push({
+                    id: key.name,
+                    pageId: key.name.replace('screenshot_', '')
+                });
+            } else if (!key.name.startsWith('stats_')) {
+                pages.push({
+                    id: key.name
+                });
+            }
+        }
+        
+        return c.json({
+            state: true,
+            message: '获取列表成功',
+            data: {
+                pages,
+                screenshots
+            }
+        });
+    } catch (error) {
+        return c.json({
+            state: false,
+            message: `服务器错误：${error}`,
+            data: null
+        });
+    }
+});
+
+// API路由 - 批量删除（管理员功能）
+app.post('/api/admin/batch-delete', async (c) => {
+    try {
+        const { password, keys } = await c.req.json();
+        
+        // 验证密码
+        if (password !== 'lcy') {
+            return c.json({
+                state: false,
+                message: '密码错误',
+                data: null
+            });
+        }
+        
+        if (!keys || !Array.isArray(keys) || keys.length === 0) {
+            return c.json({
+                state: false,
+                message: '请提供要删除的键列表',
+                data: null
+            });
+        }
+        
+        // 批量删除
+        const results = [];
+        for (const key of keys) {
+            try {
+                await env.KV.delete(key);
+                results.push({ key, success: true });
+            } catch (error) {
+                results.push({ key, success: false, error: String(error) });
+            }
+        }
+        
+        return c.json({
+            state: true,
+            message: `批量删除完成，成功：${results.filter(r => r.success).length}，失败：${results.filter(r => !r.success).length}`,
+            data: { results }
+        });
     } catch (error) {
         return c.json({
             state: false,
