@@ -140,7 +140,7 @@ function generateRandomString(long:number): string {
 }
 
 // 列出所有键值
-async function listKeys(prefix?: string, limit?: number): Promise<{state: boolean, message: string, data?: {keys: string[], cursor?: string}}> {
+async function listKeys(prefix?: string, limit?: number): Promise<{state: boolean, message: string, data?: {keys: string[]}}> {
     try {
         const listOptions: {prefix?: string, limit?: number} = {};
         if (prefix) listOptions.prefix = prefix;
@@ -153,8 +153,7 @@ async function listKeys(prefix?: string, limit?: number): Promise<{state: boolea
             state: true,
             message: '获取列表成功',
             data: {
-                keys,
-                cursor: list.cursor
+                keys
             }
         };
     } catch (error) {
